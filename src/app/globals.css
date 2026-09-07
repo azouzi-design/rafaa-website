@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-white: #ffffff;
+  --color-black: #0a0a0a;
+  --color-primary: #ffc83f;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-instrument-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  /* shared shadow style used across hero text and graphics — black @ 15% */
+  --shadow-soft: 0px 2px 4px rgba(10, 10, 10, 0.15);
+}
+
+/* Subtitle: Instrument Sans SemiBold 14px, 1.15 line-height, -1% tracking */
+@utility text-subtitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-shadow: var(--shadow-soft);
+}
+
+/* Paragraph: Instrument Sans Regular 14px, 1.2 line-height, -1% tracking */
+@utility text-paragraph {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-shadow: var(--shadow-soft);
+}
+
+html {
+  scroll-snap-type: y mandatory;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-sans);
+  /* kern/liga = kerning pairs, ligatures
+     ss01 = round dots, ss04 = alt K, ss05 = alt R, ss06 = alt M,
+     ss07 = alt G, ss08 = alt J, ss10 = alt 2, ss12 = alt currency */
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1,
+    "ss01" 1,
+    "ss04" 1,
+    "ss05" 1,
+    "ss06" 1,
+    "ss07" 1,
+    "ss08" 1,
+    "ss10" 1,
+    "ss12" 1;
+  font-kerning: normal;
 }
