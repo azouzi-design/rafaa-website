@@ -25,18 +25,51 @@
   text-shadow: var(--shadow-soft);
 }
 
-/* Paragraph: Instrument Sans Regular 14px, 1.2 line-height, -1% tracking */
+/* Paragraph: Instrument Sans Regular 16px, 1.2 line-height, -1% tracking */
 @utility text-paragraph {
   font-family: var(--font-sans);
   font-weight: 400;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.2;
   letter-spacing: -0.01em;
   text-shadow: var(--shadow-soft);
 }
 
+/* Title: Instrument Sans Bold 48px, 1.05 line-height, -2% tracking */
+@utility text-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* Text-Big: Instrument Sans Medium 28px, 1.15 line-height, -2% tracking.
+   Figma marks this as a placeholder for a font family still to be defined —
+   using Instrument Sans (the site's only font) until one is supplied. */
+@utility text-big {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
 html {
   scroll-snap-type: y mandatory;
+}
+
+/* About section's image strip: scrolls one full (duplicated) track width
+   left, so — since the track is rendered twice back to back — it loops
+   seamlessly. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 body {

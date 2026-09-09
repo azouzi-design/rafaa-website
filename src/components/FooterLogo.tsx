@@ -74,7 +74,7 @@ export default function FooterLogo({ className }: FooterLogoProps) {
           <feOffset dx="0.5" dy="1" />
           <feGaussianBlur stdDeviation="0.6" result="offset-blur" />
           <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
-          <feFlood floodColor="#ffffff" floodOpacity="0.15" result="color" />
+          <feFlood floodColor="#ffffff" floodOpacity="0.02" result="color" />
           <feComposite operator="in" in="color" in2="inverse" result="shadow" />
           <feComposite operator="over" in="shadow" in2="SourceGraphic" />
         </filter>
