@@ -3,8 +3,7 @@
 import { useState } from "react";
 import RollingText from "@/components/RollingText";
 import RevealOnScroll from "@/components/RevealOnScroll";
-
-const EMAIL = "rafaachawali@gmail.com";
+import { EMAIL, BOOKING_URL } from "@/lib/links";
 
 const TESTIMONIALS = [
   {
@@ -27,7 +26,7 @@ const TESTIMONIALS = [
 // utility would silently lose to that inline transform, so opacity is the
 // only hover affordance here.
 const CTA_BASE =
-  "group pointer-events-auto absolute whitespace-nowrap rounded-[2px] bg-primary px-3 py-2 text-black opacity-95 transition-opacity duration-200 hover:opacity-100";
+  "group pointer-events-auto absolute cursor-pointer whitespace-nowrap rounded-[2px] bg-primary px-3 py-2 text-black opacity-95 transition-opacity duration-200 hover:opacity-100";
 
 export default function ContactSection() {
   const [copied, setCopied] = useState(false);
@@ -69,10 +68,9 @@ export default function ContactSection() {
 
       <div className="pointer-events-none absolute inset-0 z-20">
         <a
-          // TODO: swap in the real booking link (Calendly/Cal.com) once
-          // available. "#booking" (not a real id) rather than a bare "#" so
-          // clicking it in the meantime doesn't jump to the page top.
-          href="#booking"
+          href={BOOKING_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className={CTA_BASE}
           style={{
             left: "calc(50% + 73.5px)",

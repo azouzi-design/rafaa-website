@@ -60,20 +60,8 @@ html {
   scroll-snap-type: y mandatory;
 }
 
-/* About section's image strip: scrolls one full (duplicated) track width
-   left, so — since the track is rendered twice back to back — it loops
-   seamlessly. */
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 body {
-  background: var(--color-white);
+  background: var(--color-black);
   color: var(--color-black);
   font-family: var(--font-sans);
   /* kern/liga = kerning pairs, ligatures

@@ -1,5 +1,6 @@
 import HeroVideo from "@/components/HeroVideo";
 import Navbar from "@/components/Navbar";
+import HeroNav from "@/components/HeroNav";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
 import ProjectsList from "@/components/ProjectsList";
@@ -59,15 +60,16 @@ export default function Home() {
       <main className="relative z-10">
         <div id="hero" className="relative snap-start">
           <HeroVideo />
+          <HeroNav />
           <div className="absolute bottom-4 left-4 z-10 mix-blend-difference flex flex-col items-start gap-4">
-            <RevealOnScroll>
+            <RevealOnScroll delay={1100}>
               <p className="text-paragraph text-white">
                 By Rafaa Chawali ® Creative partner
                 <br />
                 who specializes in video marketing
               </p>
             </RevealOnScroll>
-            <RevealOnScroll delay={150}>
+            <RevealOnScroll delay={1250}>
               <Logo className="aspect-[410/87] h-[112px]" />
             </RevealOnScroll>
           </div>

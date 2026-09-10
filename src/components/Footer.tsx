@@ -4,16 +4,17 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import FooterLogo from "@/components/FooterLogo";
 import RollingText from "@/components/RollingText";
 import RevealOnScroll from "@/components/RevealOnScroll";
+import { SOCIAL_LINKS } from "@/lib/links";
 
 const links = [
-  { label: "Home", href: "#" },
+  { label: "Home", href: "#hero" },
   { label: "About", href: "#about" },
   { label: "Projects", href: "#projects" },
-  { label: "Services", href: "#services" },
+  { label: "Services", href: "#services-1" },
   { label: "Contact", href: "#contact" },
-  { label: "Substack", href: "#" },
-  { label: "Instagram", href: "#" },
-  { label: "LinkedIn", href: "#" },
+  { label: "Substack", href: SOCIAL_LINKS.substack, external: true },
+  { label: "Instagram", href: SOCIAL_LINKS.instagram, external: true },
+  { label: "LinkedIn", href: SOCIAL_LINKS.linkedin, external: true },
 ];
 
 export default function Footer() {
@@ -80,7 +81,13 @@ export default function Footer() {
     >
       <nav className="flex w-full items-center justify-between text-black uppercase">
         {links.map((link, i) => (
-          <a key={link.label} href={link.href} className="group block">
+          <a
+            key={link.label}
+            href={link.href}
+            target={link.external ? "_blank" : undefined}
+            rel={link.external ? "noopener noreferrer" : undefined}
+            className="group block"
+          >
             <RevealOnScroll active={revealed} delay={i * 60}>
               <RollingText text={link.label} className="text-subtitle" />
             </RevealOnScroll>
