@@ -20,16 +20,27 @@ const TESTIMONIALS = [
 
 // Both CTA bands are centered on the section, rotated -57.06deg, offset from
 // screen-center by the same amount Figma's own rotated-bounding-box math
-// produced, so they read as a loosely crossing pair of tags.
-// transform (translate + rotate) is set inline per-button, since it needs
-// to combine a static rotation with a static offset — a Tailwind hover:scale
-// utility would silently lose to that inline transform, so opacity is the
-// only hover affordance here.
+// produced, so they read as a loosely crossing pair of tags — close enough
+// that tilting one on hover needs the other to tilt away in step, or they'd
+// swing into each other. That coordination can't be pure per-element :hover
+// CSS (a Tailwind hover:scale/rotate utility on either element would also
+// silently lose to its own inline transform below, same as opacity would),
+// so which CTA is hovered lives in state and both transforms are recomputed
+// from it on every render.
 const CTA_BASE =
-  "group pointer-events-auto absolute cursor-pointer whitespace-nowrap rounded-[2px] bg-primary px-3 py-2 text-black opacity-95 transition-opacity duration-200 hover:opacity-100";
+  "group pointer-events-auto absolute cursor-pointer whitespace-nowrap rounded-[2px] bg-primary px-3 py-2 text-black opacity-95 transition-[opacity,transform] duration-200 hover:opacity-100";
+
+type CtaId = "book" | "email";
 
 export default function ContactSection() {
   const [copied, setCopied] = useState(false);
+  const [hoveredCta, setHoveredCta] = useState<CtaId | null>(null);
+
+  const ctaTransform = (id: CtaId) => {
+    const rot = hoveredCta === null ? 0 : hoveredCta === id ? 4 : -4;
+    const scale = hoveredCta === id ? 1.05 : 1;
+    return `translate(-50%, -50%) rotate(calc(-57.06deg + ${rot}deg)) scale(${scale})`;
+  };
 
   const onCopyEmail = async () => {
     try {
@@ -72,10 +83,12 @@ export default function ContactSection() {
           target="_blank"
           rel="noopener noreferrer"
           className={CTA_BASE}
+          onMouseEnter={() => setHoveredCta("book")}
+          onMouseLeave={() => setHoveredCta(null)}
           style={{
             left: "calc(50% + 73.5px)",
             top: "calc(50% - 46.6px)",
-            transform: "translate(-50%, -50%) rotate(-57.06deg)",
+            transform: ctaTransform("book"),
           }}
         >
           <RevealOnScroll delay={400}>
@@ -86,10 +99,12 @@ export default function ContactSection() {
           type="button"
           onClick={onCopyEmail}
           className={CTA_BASE}
+          onMouseEnter={() => setHoveredCta("email")}
+          onMouseLeave={() => setHoveredCta(null)}
           style={{
             left: "calc(50% - 80.57px)",
             top: "calc(50% + 57.5px)",
-            transform: "translate(-50%, -50%) rotate(-57.06deg)",
+            transform: ctaTransform("email"),
           }}
         >
           <RevealOnScroll delay={500}>

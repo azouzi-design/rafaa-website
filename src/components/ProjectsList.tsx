@@ -57,7 +57,7 @@ export default function ProjectsList() {
     >
       <motion.div
         style={{ x, y, translateX: "-50%", translateY: "-50%" }}
-        className="pointer-events-none absolute top-0 left-0 z-10 overflow-hidden rounded-2xl"
+        className="pointer-events-none absolute top-0 left-0 z-10 overflow-hidden rounded-[2px]"
         animate={{
           opacity: anyActive ? 1 : 0,
           width: IMAGE_WIDTH,
