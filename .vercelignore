@@ -1,0 +1,7 @@
+# Vercel's CLI doesn't reliably fall back to .gitignore for the deploy
+# upload — raw video sources (hosted on Vercel Blob instead, see
+# src/lib/hero-video.ts and src/lib/projects.ts) were getting bundled
+# anyway and blowing past the 100MB per-file deploy limit.
+*.mp4
+*.mov
+*.webm
