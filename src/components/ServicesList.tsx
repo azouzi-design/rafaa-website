@@ -23,8 +23,14 @@ export default function ServicesList({
   const pointerRef = useRef<HTMLDivElement>(null);
   const [pointerWidth, setPointerWidth] = useState(0);
   const [hovered, setHovered] = useState<number | null>(null);
+  // Tracks whether the pointer is currently shown, so its first appearance
+  // in a section can snap straight to the hovered row instead of sliding
+  // down from the top-0 default — only row-to-row moves while it's already
+  // visible should animate `top`.
+  const isVisibleRef = useRef(false);
   const [pointerStyle, setPointerStyle] = useState<CSSProperties>({
     opacity: 0,
+    transition: "opacity 200ms ease-out",
   });
 
   // The pointer's own width varies with the pack name ("Creative Partner
@@ -43,15 +49,25 @@ export default function ServicesList({
     if (!slot) return;
     const rowRect = e.currentTarget.getBoundingClientRect();
     const slotRect = slot.getBoundingClientRect();
+    const appearing = !isVisibleRef.current;
+    isVisibleRef.current = true;
     setPointerStyle({
       opacity: 1,
       top: rowRect.top - slotRect.top + rowRect.height / 2,
+      transition: appearing
+        ? "opacity 200ms ease-out"
+        : "top 200ms ease-out, opacity 200ms ease-out",
     });
   };
 
   const onListLeave = () => {
     setHovered(null);
-    setPointerStyle((s) => ({ ...s, opacity: 0 }));
+    isVisibleRef.current = false;
+    setPointerStyle((s) => ({
+      ...s,
+      opacity: 0,
+      transition: "opacity 200ms ease-out",
+    }));
   };
 
   const list = (
@@ -94,7 +110,7 @@ export default function ServicesList({
     >
       <div
         ref={pointerRef}
-        className={`pointer-events-none absolute top-0 flex w-max -translate-y-1/2 items-center gap-3 whitespace-nowrap transition-[top,opacity] duration-200 ease-out ${
+        className={`pointer-events-none absolute top-0 flex w-max -translate-y-1/2 items-center gap-3 whitespace-nowrap ${
           side === "right" ? "left-0" : "right-0"
         }`}
         style={pointerStyle}

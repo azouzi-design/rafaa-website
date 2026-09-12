@@ -1,27 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { motion, useMotionValue, useSpring, type Transition } from "framer-motion";
 import RevealOnScroll from "@/components/RevealOnScroll";
+import { PROJECTS as ALL_PROJECTS, type Project } from "@/lib/projects";
 
-type Project = {
-  text: string;
-  image: string;
-};
-
-// Placeholder thumbnails reusing the About section's photos — swap for real
-// project stills once available.
-const PROJECTS: Project[] = [
-  { text: "Fabskill", image: "/images/about/about-01.jpg" },
-  { text: "Cynoia", image: "/images/about/about-02.jpg" },
-  { text: "Jam Music Academy", image: "/images/about/about-03.jpg" },
-  { text: 'Radhi Chawali — "Hide & Seek"', image: "/images/about/about-04.jpg" },
-  { text: "Spectra La Rose", image: "/images/about/about-05.jpg" },
-  { text: "Oakley x Cactus Jack", image: "/images/about/about-01.jpg" },
-];
-
-const IMAGE_WIDTH = 300;
-const IMAGE_HEIGHT = 400;
+// Bounding box the cursor-following preview animates within — each
+// project's own video keeps its real aspect ratio (portrait, landscape,
+// whatever the source is) and is "contain"-fit inside this box rather than
+// all of them sharing one forced shape. See fitInBox below.
+const PREVIEW_MAX_WIDTH = 340;
+const PREVIEW_MAX_HEIGHT = 420;
 const CURSOR_OFFSET_X = 200;
 const TRANSITION: Transition = {
   type: "spring",
@@ -31,10 +21,27 @@ const TRANSITION: Transition = {
 };
 const SPRING_CONFIG = { stiffness: 125, damping: 28, mass: 0.5 };
 
-export default function ProjectsList() {
+function fitInBox(width: number, height: number) {
+  const scale = Math.min(PREVIEW_MAX_WIDTH / width, PREVIEW_MAX_HEIGHT / height);
+  return { width: Math.round(width * scale), height: Math.round(height * scale) };
+}
+
+type ProjectsListProps = {
+  // Defaults to every project (homepage usage). A project's own page
+  // passes every OTHER project — see ProjectsCatalogue.
+  projects?: Project[];
+};
+
+export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const [hovered, setHovered] = useState<number | null>(null);
   const anyActive = hovered !== null;
+  const previewSizes = useMemo(
+    () => projects.map((project) => fitInBox(project.coverVideo.width, project.coverVideo.height)),
+    [projects],
+  );
+  const activeSize = previewSizes[hovered ?? 0];
 
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
@@ -48,6 +55,17 @@ export default function ProjectsList() {
     rawY.set(e.clientY - rect.top);
   };
 
+  // Only the hovered preview actually plays — the rest sit paused so 6
+  // videos aren't all decoding at once for the sake of five the cursor
+  // never lands on.
+  useEffect(() => {
+    videoRefs.current.forEach((video, i) => {
+      if (!video) return;
+      if (i === hovered) video.play().catch(() => {});
+      else video.pause();
+    });
+  }, [hovered]);
+
   return (
     <div
       ref={containerRef}
@@ -60,12 +78,12 @@ export default function ProjectsList() {
         className="pointer-events-none absolute top-0 left-0 z-10 overflow-hidden rounded-[2px]"
         animate={{
           opacity: anyActive ? 1 : 0,
-          width: IMAGE_WIDTH,
-          height: IMAGE_HEIGHT,
+          width: activeSize.width,
+          height: activeSize.height,
         }}
         transition={TRANSITION}
       >
-        {PROJECTS.map((project, i) => {
+        {projects.map((project, i) => {
           const yPos =
             hovered === null
               ? "100%"
@@ -76,16 +94,25 @@ export default function ProjectsList() {
                   : "0%";
           return (
             <motion.div
-              key={project.text}
+              key={project.slug}
               initial={false}
               animate={{ y: yPos }}
               transition={TRANSITION}
               className="absolute inset-0 h-full w-full overflow-hidden"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={project.image}
-                alt={project.text}
+              <video
+                ref={(el) => {
+                  videoRefs.current[i] = el;
+                }}
+                src={project.coverVideo.src}
+                poster={project.coverImage}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                disablePictureInPicture
+                disableRemotePlayback
+                onContextMenu={(e) => e.preventDefault()}
                 className="h-full w-full object-cover"
               />
             </motion.div>
@@ -93,8 +120,11 @@ export default function ProjectsList() {
         })}
       </motion.div>
 
-      <div className="flex flex-col items-center gap-[2px]">
-        {PROJECTS.map((project, i) => {
+      <div
+        onMouseLeave={() => setHovered(null)}
+        className="flex flex-col items-center gap-[2px]"
+      >
+        {projects.map((project, i) => {
           const isHovered = hovered === i;
           // Default: white. Active (hovered): primary. Disabled (a sibling
           // is hovered instead): white at 40% opacity.
@@ -104,10 +134,11 @@ export default function ProjectsList() {
               : "text-white/40"
             : "text-white";
           return (
-            <RevealOnScroll key={project.text} delay={i * 60}>
-              <div
+            <RevealOnScroll key={project.slug} delay={i * 60}>
+              <Link
+                href={`/projects/${project.slug}`}
                 onMouseEnter={() => setHovered(i)}
-                className="cursor-default overflow-hidden"
+                className="block cursor-pointer overflow-hidden"
               >
                 <motion.div
                   className="relative"
@@ -117,16 +148,16 @@ export default function ProjectsList() {
                   <span
                     className={`text-title block whitespace-pre transition-colors duration-200 ${colorClass}`}
                   >
-                    {project.text}
+                    {project.title}
                   </span>
                   <span
                     aria-hidden
                     className={`text-title absolute top-full left-0 block w-full whitespace-pre transition-colors duration-200 ${colorClass}`}
                   >
-                    {project.text}
+                    {project.title}
                   </span>
                 </motion.div>
-              </div>
+              </Link>
             </RevealOnScroll>
           );
         })}

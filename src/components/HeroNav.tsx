@@ -40,7 +40,7 @@ export default function HeroNav() {
   };
 
   return (
-    <div className="absolute inset-x-0 top-0 z-10 mix-blend-difference flex items-center justify-between p-4 text-white uppercase">
+    <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 text-white uppercase">
       <ul className="flex items-center gap-6">
         {primaryLinks.map((link, i) => (
           <li key={link.label}>

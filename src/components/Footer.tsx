@@ -5,12 +5,16 @@ import FooterLogo from "@/components/FooterLogo";
 import RollingText from "@/components/RollingText";
 import { SOCIAL_LINKS } from "@/lib/links";
 
+// Home-relative ("/#section") rather than bare "#section" hashes — Footer
+// is now also rendered on project pages, and a bare hash there would try to
+// scroll to an anchor on the current (project) page instead of navigating
+// back to the matching homepage section.
 const links = [
-  { label: "Home", href: "#hero" },
-  { label: "About", href: "#about" },
-  { label: "Projects", href: "#projects" },
-  { label: "Services", href: "#services-1" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/#hero" },
+  { label: "About", href: "/#about" },
+  { label: "Projects", href: "/#projects" },
+  { label: "Services", href: "/#services-1" },
+  { label: "Contact", href: "/#contact" },
   { label: "Substack", href: SOCIAL_LINKS.substack, external: true },
   { label: "Instagram", href: SOCIAL_LINKS.instagram, external: true },
   { label: "LinkedIn", href: SOCIAL_LINKS.linkedin, external: true },

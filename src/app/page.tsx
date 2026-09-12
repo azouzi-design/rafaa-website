@@ -61,7 +61,7 @@ export default function Home() {
         <div id="hero" className="relative snap-start">
           <HeroVideo />
           <HeroNav />
-          <div className="absolute bottom-4 left-4 z-10 mix-blend-difference flex flex-col items-start gap-4">
+          <div className="absolute bottom-4 left-4 z-10 flex flex-col items-start gap-4">
             <RevealOnScroll delay={1100}>
               <p className="text-paragraph text-white">
                 By Rafaa Chawali ® Creative partner
@@ -96,7 +96,14 @@ export default function Home() {
             items={PRODUCTION_PACK}
           />
         </section>
-        <section id="contact" className="h-screen w-full snap-start bg-black">
+        {/* snap-always (scroll-snap-stop) makes Contact a mandatory stop a
+            fast fling can't skip past straight to Footer — without it, the
+            native snap can jump two sections in one gesture, landing on
+            Footer before ContactSection's reveal-gate ever sees the scroll. */}
+        <section
+          id="contact"
+          className="h-screen w-full snap-start snap-always bg-black"
+        >
           <ContactSection />
         </section>
       </main>

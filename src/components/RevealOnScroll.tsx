@@ -14,6 +14,14 @@ type RevealOnScrollProps = {
   // to the user, so those callers compute a real "is this genuinely visible
   // right now" signal themselves and pass it in here.
   active?: boolean;
+  // ms, for the reveal (visible: false -> true). Defaults to the reference
+  // animation's own 500ms.
+  duration?: number;
+  // ms, for the hide (visible: true -> false). Defaults to `duration` —
+  // i.e. symmetric, same as before — but callers that toggle back and
+  // forth rapidly (e.g. ProjectHero swapping between two text blocks) can
+  // pass a shorter one so hiding doesn't linger.
+  exitDuration?: number;
 };
 
 // Captured from 53w53.com's nav-menu reveal: each item sits in an
@@ -28,6 +36,8 @@ export default function RevealOnScroll({
   className = "",
   delay = 0,
   active,
+  duration = 500,
+  exitDuration = duration,
 }: RevealOnScrollProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [selfVisible, setSelfVisible] = useState(false);
@@ -50,8 +60,9 @@ export default function RevealOnScroll({
   return (
     <div ref={ref} className={`overflow-hidden ${className}`}>
       <div
-        className="transition-[transform,opacity] duration-500 ease-out"
+        className="transition-[transform,opacity] ease-out"
         style={{
+          transitionDuration: `${visible ? duration : exitDuration}ms`,
           transitionDelay: `${delay}ms`,
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0%)" : "translateY(105%)",

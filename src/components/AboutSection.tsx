@@ -1,128 +1,122 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
+import { useRef, useState } from "react";
 import RevealOnScroll from "@/components/RevealOnScroll";
 
-// Image order matches the Figma track exactly; each box is 432px tall (1.2x
-// the old 360px marquee sizing) with width left to the image's own natural
-// aspect ratio.
-const IMAGE_TRACK = [
-  "/images/about/about-02.jpg",
-  "/images/about/about-05.jpg",
+const ABOUT_IMAGES = [
   "/images/about/about-01.jpg",
-  "/images/about/about-04.jpg",
+  "/images/about/about-02.jpg",
   "/images/about/about-03.jpg",
+  "/images/about/about-04.jpg",
+  "/images/about/about-05.jpg",
+  "/images/about/about-06.jpeg",
+  "/images/about/about-07.jpeg",
+  "/images/about/about-08.jpeg",
+  "/images/about/about-09.jpeg",
+  "/images/about/about-10.jpeg",
+  "/images/about/about-11.jpg",
+  "/images/about/about-13.png",
 ];
 
-// How much accumulated wheel/touch delta (px) it takes to sweep the gallery
-// fully across the screen — tuned by feel, not tied to any real document
-// scroll distance (the section stays exactly one viewport tall; see below).
-const SWEEP_DISTANCE = 4200;
+// How far (px) the cursor has to travel since the last spawn before the next
+// photo pops in — small enough to feel responsive, large enough that photos
+// don't crowd on top of each other.
+const SPAWN_DISTANCE = 90;
+const BOX_W = 170;
+const BOX_H = 210;
+// Total lifetime of one photo: fade/scale in, hold, fade/scale out. The
+// removal timeout mirrors this so the DOM node is cleared right as it
+// finishes disappearing.
+const TRAIL_LIFETIME_MS = 1500;
+// Hard cap on concurrent photos so a burst of fast mouse movement can't pile
+// up more DOM nodes than intended while waiting for their timeouts to fire.
+const MAX_CONCURRENT = 7;
 
-// Per-frame lerp factor pulling the rendered position toward the input-driven
-// target — gives the sweep a damped, eased-follow feel instead of tracking
-// the wheel 1:1.
-const SMOOTHING = 0.15;
+type TrailItem = {
+  id: number;
+  src: string;
+  x: number;
+  y: number;
+  rotate: number;
+  scale: number;
+};
 
-// Unlike a ScrollTrigger pin, this never grows the document's scroll height:
-// the About section stays exactly one viewport tall and the outer page never
-// scrolls past it while the gallery is mid-sweep. Instead, wheel/touch input
-// is captured and converted into a virtual 0-1 progress value that drives the
-// image track directly via a manual rAF lerp (not gsap.quickTo — mixing that
-// with gsap.set for the immediate/resize case desyncs its internal tween
-// cache and the track settles at the wrong position). Input only falls
-// through to the real (snap-scrolling) page once the sweep has fully
-// finished in that direction — at progress 0 scrolling up, or progress 1
-// scrolling down.
 export default function AboutSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const targetProgress = useRef(0);
-  const renderedProgress = useRef(0);
+  const [trail, setTrail] = useState<TrailItem[]>([]);
+  const lastSpawnRef = useRef<{ x: number; y: number } | null>(null);
+  const lastImageRef = useRef<string | null>(null);
+  const idRef = useRef(0);
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    const track = trackRef.current;
-    if (!container || !track) return;
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    const xFor = (progress: number) => {
-      const startX = container.offsetWidth; // fully off-screen right
-      const endX = -track.scrollWidth; // fully off-screen left
-      return gsap.utils.interpolate(startX, endX, progress);
+    const last = lastSpawnRef.current;
+    if (last) {
+      const dx = x - last.x;
+      const dy = y - last.y;
+      if (dx * dx + dy * dy < SPAWN_DISTANCE * SPAWN_DISTANCE) return;
+    }
+    lastSpawnRef.current = { x, y };
+
+    // Avoid the same photo appearing twice in a row.
+    let src = ABOUT_IMAGES[Math.floor(Math.random() * ABOUT_IMAGES.length)];
+    if (ABOUT_IMAGES.length > 1) {
+      while (src === lastImageRef.current) {
+        src = ABOUT_IMAGES[Math.floor(Math.random() * ABOUT_IMAGES.length)];
+      }
+    }
+    lastImageRef.current = src;
+
+    const id = idRef.current++;
+    const item: TrailItem = {
+      id,
+      src,
+      x,
+      y,
+      rotate: Math.random() * 12 - 6,
+      scale: 0.9 + Math.random() * 0.25,
     };
 
-    const render = () => {
-      renderedProgress.current +=
-        (targetProgress.current - renderedProgress.current) * SMOOTHING;
-      track.style.transform = `translateX(${xFor(renderedProgress.current)}px)`;
-    };
-
-    render();
-    let rafId = requestAnimationFrame(function loop() {
-      render();
-      rafId = requestAnimationFrame(loop);
+    setTrail((prev) => {
+      const next = [...prev, item];
+      return next.length > MAX_CONCURRENT ? next.slice(1) : next;
     });
 
-    const snapImmediate = () => {
-      renderedProgress.current = targetProgress.current;
-      render();
-    };
+    const timeoutId = setTimeout(() => {
+      timeoutsRef.current.delete(timeoutId);
+      setTrail((prev) => prev.filter((i) => i.id !== id));
+    }, TRAIL_LIFETIME_MS);
+    timeoutsRef.current.add(timeoutId);
+  };
 
-    const resizeObserver = new ResizeObserver(snapImmediate);
-    resizeObserver.observe(track);
-    window.addEventListener("resize", snapImmediate);
-
-    const nudge = (delta: number, distance: number) => {
-      const atStart = targetProgress.current <= 0;
-      const atEnd = targetProgress.current >= 1;
-      if ((atStart && delta < 0) || (atEnd && delta > 0)) return false;
-      targetProgress.current = gsap.utils.clamp(
-        0,
-        1,
-        targetProgress.current + delta / distance,
-      );
-      return true;
-    };
-
-    const handleWheel = (e: WheelEvent) => {
-      if (nudge(e.deltaY, SWEEP_DISTANCE)) e.preventDefault();
-    };
-
-    let touchY = 0;
-    const handleTouchStart = (e: TouchEvent) => {
-      touchY = e.touches[0].clientY;
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      const y = e.touches[0].clientY;
-      const delta = touchY - y;
-      touchY = y;
-      if (nudge(delta, SWEEP_DISTANCE * 0.6)) e.preventDefault();
-    };
-
-    container.addEventListener("wheel", handleWheel, { passive: false });
-    container.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
-    container.addEventListener("touchmove", handleTouchMove, {
-      passive: false,
-    });
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", snapImmediate);
-      container.removeEventListener("wheel", handleWheel);
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, []);
+  const clearTrail = () => {
+    for (const id of timeoutsRef.current) clearTimeout(id);
+    timeoutsRef.current.clear();
+    lastSpawnRef.current = null;
+    setTrail([]);
+  };
 
   return (
     <div
       ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={clearTrail}
       className="relative h-full w-full overflow-hidden bg-black"
     >
+      <style>{`
+        @keyframes about-trail-pop {
+          0% { opacity: 0; transform: rotate(var(--trail-rotate)) scale(calc(var(--trail-scale) * 0.7)); }
+          15% { opacity: 1; transform: rotate(var(--trail-rotate)) scale(var(--trail-scale)); }
+          75% { opacity: 1; transform: rotate(var(--trail-rotate)) scale(var(--trail-scale)); }
+          100% { opacity: 0; transform: rotate(var(--trail-rotate)) scale(calc(var(--trail-scale) * 0.94)); }
+        }
+      `}</style>
+
       <div className="absolute inset-0 z-0 flex items-center justify-center px-[20px]">
         <div className="flex max-w-[800px] flex-col gap-8 text-center">
           <RevealOnScroll>
@@ -144,22 +138,38 @@ export default function AboutSection() {
         </div>
       </div>
 
-      <div className="absolute inset-0 z-10 flex items-center overflow-hidden">
-        <div ref={trackRef} className="flex w-max items-center gap-[6px]">
-          {IMAGE_TRACK.map((src, i) => (
+      <div className="pointer-events-none absolute inset-0 z-10">
+        {trail.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              position: "absolute",
+              left: item.x,
+              top: item.y,
+              width: BOX_W,
+              height: BOX_H,
+              transform: "translate(-50%, -50%)",
+            }}
+          >
             <div
-              key={i}
-              className="h-[432px] shrink-0 overflow-hidden rounded-[2px] opacity-[0.97]"
+              style={{
+                width: "100%",
+                height: "100%",
+                "--trail-rotate": `${item.rotate}deg`,
+                "--trail-scale": item.scale,
+                animation: `about-trail-pop ${TRAIL_LIFETIME_MS}ms ease-out forwards`,
+              } as React.CSSProperties}
+              className="overflow-hidden rounded-[2px] shadow-[0_20px_45px_rgba(0,0,0,0.45)]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={src}
+                src={item.src}
                 alt=""
-                className="pointer-events-none h-full w-auto object-cover"
+                className="h-full w-full object-cover"
               />
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

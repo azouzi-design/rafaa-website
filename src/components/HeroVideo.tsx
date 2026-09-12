@@ -92,7 +92,7 @@ export default function HeroVideo() {
         playsInline
         preload="auto"
         poster={HERO_VIDEO.poster}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover opacity-70"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
       >
