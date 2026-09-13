@@ -260,7 +260,7 @@ export default function ContactSection() {
               enough to their centers to visibly overlap/touch. */}
           <div
             className="absolute"
-            style={{ left: "-93px", top: "66px", transform: "translate(-50%, -50%)" }}
+            style={{ left: "-84px", top: "59px", transform: "translate(-50%, -50%)" }}
           >
             <button
               type="button"
@@ -319,7 +319,8 @@ export default function ContactSection() {
           src="/images/logo-mark-slashes.svg"
           alt=""
           aria-hidden="true"
-          className="h-[32px] w-[22.43px]"
+          style={{ aspectRatio: "22.4264 / 32" }}
+          className="h-[20px] w-auto"
         />
         <span className="text-subtitle text-primary uppercase">
           Book a Call
