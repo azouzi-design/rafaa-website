@@ -196,13 +196,25 @@ export default function ProjectHero({ project }: { project: Project }) {
         layout
         transition={TRANSITION}
         onClick={() => setPhase(true)}
+        // aspectRatio only matters for the small (not-entered) thumbnail,
+        // where height + auto width need it to derive the real shape —
+        // once entered, both width and height are explicit (below) so this
+        // is simply ignored per the CSS aspect-ratio spec, no conflict.
         style={{ aspectRatio: `${width} / ${height}` }}
         className={
           entered
-            ? "absolute top-4 right-4 w-full max-w-[68vw] overflow-hidden rounded-[2px]"
+            ? "absolute top-4 right-4 h-[calc(100vh-32px)] w-full max-w-[68vw] overflow-hidden rounded-[2px]"
             : "absolute right-4 bottom-4 h-[110px] w-auto cursor-pointer overflow-hidden rounded-[2px] opacity-97"
         }
       >
+        {/* Forcing the container's height (rather than deriving it from
+            the video's own aspect ratio, like the small thumbnail does)
+            means a portrait video no longer overflows past the viewport —
+            it's now the container that's guaranteed to fit within 16px
+            top/bottom margins. object-cover (+ its default centered
+            object-position) crops the video to fill that box instead of
+            distorting it, so tall/portrait sources stay centered rather
+            than stretched or pinned to one edge. */}
         <video
           src={project.coverVideo.src}
           poster={project.coverImage}

@@ -255,9 +255,12 @@ export default function ContactSection() {
               <RollingText text="Book a Call" className="text-title" />
             </a>
           </div>
+          {/* Pushed further out than Book a Call's own offset (rather than
+              scaled symmetrically) — the two ribbons were crossing close
+              enough to their centers to visibly overlap/touch. */}
           <div
             className="absolute"
-            style={{ left: "-80.57px", top: "57.5px", transform: "translate(-50%, -50%)" }}
+            style={{ left: "-93px", top: "66px", transform: "translate(-50%, -50%)" }}
           >
             <button
               type="button"
@@ -285,28 +288,32 @@ export default function ContactSection() {
             <button
               type="button"
               onClick={() => setMinimized(true)}
-              className="pointer-events-auto inline-block cursor-pointer rounded-[2px] bg-white px-2 py-0.5 text-black uppercase opacity-95 transition-opacity duration-200 hover:opacity-100"
+              className="group pointer-events-auto inline-block cursor-pointer rounded-[2px] bg-white px-2 py-0.5 text-black uppercase opacity-95 transition-opacity duration-200 hover:opacity-100"
             >
-              <span className="text-subtitle">minimize</span>
+              <RollingText text="minimize" className="text-subtitle" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* The two CTAs collapse into this small slashed mark (bottom edge,
-          16px margin) — a dedicated asset, not the regular 13x11
-          logo-mark.svg used elsewhere. Hovering it swaps straight back to
-          the CTA cluster (a real un-minimize, not a temporary peek) — the
-          two never show at the same time. Same interaction as
+      {/* Figma node 47:241: the two CTAs collapse into this compact
+          readout (bottom edge, 16px margin) — labels flanking the same
+          slashed mark (node 47:237, a dedicated asset, not the regular
+          13x11 logo-mark.svg used elsewhere). Hovering it swaps straight
+          back to the CTA cluster (a real un-minimize, not a temporary
+          peek) — the two never show at the same time. Same interaction as
           ProjectsCatalogue's own minimize toggle. */}
       <div
-        className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 transition-opacity duration-300 ease-out"
+        className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 transition-opacity duration-300 ease-out"
         style={{
           opacity: iconVisible ? 1 : 0,
           pointerEvents: iconVisible ? "auto" : "none",
         }}
         onMouseEnter={() => setMinimized(false)}
       >
+        <span className="text-subtitle text-primary uppercase">
+          {copied ? "Copied!" : "Copy Email"}
+        </span>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/logo-mark-slashes.svg"
@@ -314,6 +321,9 @@ export default function ContactSection() {
           aria-hidden="true"
           className="h-[32px] w-[22.43px]"
         />
+        <span className="text-subtitle text-primary uppercase">
+          Book a Call
+        </span>
       </div>
     </div>
   );
