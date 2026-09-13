@@ -1,98 +1,141 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { HERO_VIDEO } from "@/lib/hero-video";
+import { HERO_VIDEO, HERO_AUDIO } from "@/lib/hero-video";
 
 export default function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [soundOn, setSoundOn] = useState(false);
-  // Whether the video is *supposed* to be playing right now (tab visible) —
-  // used to tell an intentional pause (tab hidden) apart from an
-  // unintended one (media keys, a stall). It plays continuously for the
-  // whole homepage visit regardless of which section is scrolled into
-  // view — see the toggle button below, which is `fixed` so it stays
-  // reachable the entire time.
+
+  // Video: always muted — the new hero video's own audio track is silent
+  // (see hero-video.ts), and separately, background sound now comes from
+  // its own independent <audio> element below, not the video. Plays
+  // continuously while both true: the tab is visible, and this section is
+  // actually on screen — scrolling away pauses it, same as switching tabs.
+  useEffect(() => {
+    const video = videoRef.current;
+    const root = rootRef.current;
+    if (!video || !root) return;
+
+    const tabHiddenRef = { current: false };
+    const outOfViewRef = { current: false };
+
+    const sync = () => {
+      const shouldPlay = !tabHiddenRef.current && !outOfViewRef.current;
+      if (shouldPlay) video.play().catch(() => {});
+      else video.pause();
+    };
+
+    const onVisibilityChange = () => {
+      tabHiddenRef.current = document.visibilityState !== "visible";
+      sync();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    onVisibilityChange();
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        outOfViewRef.current = !entry.isIntersecting;
+        sync();
+      },
+      { threshold: 0 },
+    );
+    observer.observe(root);
+
+    const onPause = () => {
+      if (!tabHiddenRef.current && !outOfViewRef.current) video.play().catch(() => {});
+    };
+    video.addEventListener("pause", onPause);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      observer.disconnect();
+      video.removeEventListener("pause", onPause);
+    };
+  }, []);
+
+  // Audio: independent of scroll position — it's ambient background sound
+  // for the whole visit, so it keeps playing wherever the user has
+  // scrolled to, only stopping when the tab itself isn't visible. Same
+  // resilient-autoplay pattern the video used to use for its own sound:
+  // first attempt unmuted (rare browsers allow it), fall back to muted +
+  // waiting for the mute button (a real gesture) to unlock it.
   const shouldPlayRef = useRef(false);
   const hasAttemptedUnmutedRef = useRef(false);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
     const attemptPlay = () => {
-      // First-ever play attempt tries unmuted (browsers that allow it —
-      // rare — keep sound on); every later resume just replays as-is.
       if (!hasAttemptedUnmutedRef.current) {
         hasAttemptedUnmutedRef.current = true;
-        video.muted = false;
-        video
+        audio.muted = false;
+        audio
           .play()
           .then(() => setSoundOn(true))
           .catch(() => {
-            video.muted = true;
+            audio.muted = true;
             setSoundOn(false);
-            video.play().catch(() => {});
+            audio.play().catch(() => {});
           });
         return;
       }
-      video.play().catch(() => {});
+      audio.play().catch(() => {});
     };
 
     const sync = () => {
       const desired = document.visibilityState === "visible";
       shouldPlayRef.current = desired;
       if (desired) attemptPlay();
-      else video.pause();
+      else audio.pause();
     };
     sync();
 
-    // Stop when the tab/window isn't visible, resume when it is again.
     const onVisibilityChange = () => sync();
     document.addEventListener("visibilitychange", onVisibilityChange);
 
-    // While it's supposed to be playing, any pause is unintended (OS media
-    // keys, a browser intervention, a network stall) — recover from it. A
-    // pause we triggered ourselves above is intentional and left alone.
     const onPause = () => {
-      if (shouldPlayRef.current) video.play().catch(() => {});
+      if (shouldPlayRef.current) audio.play().catch(() => {});
     };
-    video.addEventListener("pause", onPause);
+    audio.addEventListener("pause", onPause);
 
-    // Last resort: if a resume attempt above still gets policy-blocked,
-    // the next interaction anywhere is a real gesture that unblocks it.
     const onInteraction = () => {
-      if (shouldPlayRef.current && video.paused) video.play().catch(() => {});
+      if (shouldPlayRef.current && audio.paused) audio.play().catch(() => {});
     };
     window.addEventListener("pointerdown", onInteraction);
     window.addEventListener("keydown", onInteraction);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
-      video.removeEventListener("pause", onPause);
+      audio.removeEventListener("pause", onPause);
       window.removeEventListener("pointerdown", onInteraction);
       window.removeEventListener("keydown", onInteraction);
     };
   }, []);
 
   const toggleSound = () => {
-    const video = videoRef.current;
-    if (!video) return;
+    const audio = audioRef.current;
+    if (!audio) return;
     const next = !soundOn;
-    video.muted = !next;
+    audio.muted = !next;
     setSoundOn(next);
     // Click is a real user gesture, so unmuted playback is always allowed here.
-    video.play().catch(() => {});
+    audio.play().catch(() => {});
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black">
+    <div ref={rootRef} className="relative h-screen w-full overflow-hidden bg-black">
       <video
         ref={videoRef}
         loop
+        muted
         playsInline
         preload="auto"
         poster={HERO_VIDEO.poster}
-        className="absolute inset-0 h-full w-full object-cover opacity-70"
+        className="absolute inset-0 h-full w-full object-cover opacity-[85%]"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -100,14 +143,19 @@ export default function HeroVideo() {
         <source src={HERO_VIDEO.mp4} type="video/mp4" />
       </video>
 
+      <audio ref={audioRef} loop preload="auto">
+        <source src={HERO_AUDIO.webm} type="audio/webm" />
+        <source src={HERO_AUDIO.m4a} type="audio/mp4" />
+      </audio>
+
       {/* `fixed` (not `absolute`) so it stays put on screen through the
           whole homepage scroll instead of scrolling away with Hero — it
-          controls playback for the entire visit, so it needs to stay
-          reachable everywhere, same as Navbar (hence matching z-50). */}
+          controls the background audio for the entire visit, so it needs
+          to stay reachable everywhere. */}
       <button
         type="button"
         onClick={toggleSound}
-        aria-label={soundOn ? "Mute video sound" : "Unmute video sound"}
+        aria-label={soundOn ? "Mute background audio" : "Unmute background audio"}
         aria-pressed={soundOn}
         className="fixed bottom-6 right-6 z-50 flex h-10 items-center gap-2 rounded-full bg-black/40 px-5 text-white backdrop-blur-sm transition hover:bg-black/60"
       >

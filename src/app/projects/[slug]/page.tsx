@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProjectHeader from "@/components/ProjectHeader";
 import ProjectHero from "@/components/ProjectHero";
+import ProjectVideoShowcase from "@/components/ProjectVideoShowcase";
 import ProjectsCatalogue from "@/components/ProjectsCatalogue";
 import Footer from "@/components/Footer";
-import RevealOnScroll from "@/components/RevealOnScroll";
 import { PROJECTS, getProject } from "@/lib/projects";
 
 export function generateStaticParams() {
@@ -43,16 +43,7 @@ export default async function ProjectPage(
       <main className="relative z-10 bg-black">
         <ProjectHero project={project} />
 
-        <div className="grid snap-start grid-cols-1 gap-2 p-2 sm:grid-cols-2">
-          {project.gallery.map((src, i) => (
-            <RevealOnScroll key={src} delay={i * 100}>
-              <div className="aspect-[3/4] overflow-hidden rounded-[2px]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="h-full w-full object-cover" />
-              </div>
-            </RevealOnScroll>
-          ))}
-        </div>
+        <ProjectVideoShowcase videos={project.videos} />
 
         <ProjectsCatalogue currentSlug={project.slug} />
       </main>

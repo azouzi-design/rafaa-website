@@ -73,6 +73,12 @@ export default function ProjectHero({ project }: { project: Project }) {
     return top !== undefined && top > -4 && top < 4;
   };
 
+  // True only while advanceToNext's own scroll animation is actively
+  // running — lets the wheel handler tell "we're mid-leave-transition"
+  // apart from "we've genuinely arrived somewhere else", independent of
+  // isAtRest() (which stops being true the instant that scroll starts).
+  const advancingRef = useRef(false);
+
   // Once part2 is showing, leaving the hero shouldn't be a slow native
   // scroll through the full h-screen distance (proportional to however
   // much the user happens to scroll) — a single qualifying gesture instead
@@ -84,6 +90,7 @@ export default function ProjectHero({ project }: { project: Project }) {
   const advanceToNext = () => {
     const target = rootRef.current?.nextElementSibling;
     if (!target) return;
+    advancingRef.current = true;
     const startY = window.scrollY;
     const endY = startY + target.getBoundingClientRect().top;
     const duration = 260;
@@ -94,6 +101,7 @@ export default function ProjectHero({ project }: { project: Project }) {
       const t = Math.min((now - startTime) / duration, 1);
       window.scrollTo(0, startY + (endY - startY) * easeOutCubic(t));
       if (t < 1) requestAnimationFrame(step);
+      else advancingRef.current = false;
     };
     requestAnimationFrame(step);
   };
@@ -101,10 +109,20 @@ export default function ProjectHero({ project }: { project: Project }) {
   useEffect(() => {
     // A single physical swipe fires many wheel events in a burst; once one
     // of them triggers a phase flip, the rest of that same burst is eaten
-    // too so it can't also leak into a native scroll past the hero (or, on
-    // the way back, past part1) in the same motion. Wheel/touch have no
-    // real "gesture end" event, so quiet-for-a-beat / touchend stand in for
-    // one — identical technique to ContactSection's own gate.
+    // too so it can't also leak into *also* advancing in the same motion
+    // (or, on the way back, past part1) — a gesture should only ever do
+    // one step. Wheel/touch have no real "gesture end" event, so
+    // quiet-for-a-beat stands in for one; this must stay uncapped (a fixed
+    // time limit here previously let one long gesture fall through mid-
+    // transition and immediately trigger the *next* step too).
+    //
+    // What actually needs to be time-bounded is different: once we've
+    // genuinely left (not at rest, and no leave-animation in flight), this
+    // global window listener must stop swallowing immediately, regardless
+    // of the gesture-active flag above — otherwise a still-active flag
+    // (kept alive by continued scrolling elsewhere) silently eats wheel
+    // input anywhere on the page long after this section stopped being
+    // relevant.
     let wheelGestureActive = false;
     let wheelQuietTimer: ReturnType<typeof setTimeout> | undefined;
     const armWheelQuietTimer = () => {
@@ -115,12 +133,20 @@ export default function ProjectHero({ project }: { project: Project }) {
     };
 
     const onWheel = (e: WheelEvent) => {
+      if (!isAtRest() && !advancingRef.current) {
+        wheelGestureActive = false;
+        return;
+      }
       if (wheelGestureActive) {
         e.preventDefault();
         armWheelQuietTimer();
         return;
       }
-      if (!isAtRest()) return;
+      if (advancingRef.current) {
+        // Mid leave-animation — keep consuming until it finishes.
+        e.preventDefault();
+        return;
+      }
       if (e.deltaY > 0 && !enteredRef.current) {
         e.preventDefault();
         setPhase(true);

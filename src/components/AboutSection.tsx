@@ -4,18 +4,20 @@ import { useRef, useState } from "react";
 import RevealOnScroll from "@/components/RevealOnScroll";
 
 const ABOUT_IMAGES = [
-  "/images/about/about-01.jpg",
-  "/images/about/about-02.jpg",
-  "/images/about/about-03.jpg",
-  "/images/about/about-04.jpg",
-  "/images/about/about-05.jpg",
-  "/images/about/about-06.jpeg",
-  "/images/about/about-07.jpeg",
-  "/images/about/about-08.jpeg",
-  "/images/about/about-09.jpeg",
-  "/images/about/about-10.jpeg",
-  "/images/about/about-11.jpg",
-  "/images/about/about-13.png",
+  "/images/about/about-01.webp",
+  "/images/about/about-02.webp",
+  "/images/about/about-03.webp",
+  "/images/about/about-04.webp",
+  "/images/about/about-05.webp",
+  "/images/about/about-06.webp",
+  "/images/about/about-07.webp",
+  "/images/about/about-08.webp",
+  "/images/about/about-09.webp",
+  "/images/about/about-10.webp",
+  "/images/about/about-11.webp",
+  "/images/about/about-12.webp",
+  "/images/about/about-13.webp",
+  "/images/about/about-14.webp",
 ];
 
 // How far (px) the cursor has to travel since the last spawn before the next

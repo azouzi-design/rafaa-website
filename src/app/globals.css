@@ -64,6 +64,12 @@ body {
   background: var(--color-black);
   color: var(--color-black);
   font-family: var(--font-sans);
+  /* Inherited (like white-space), so this cascades to every text element
+     site-wide from one place. Browsers cap "balance" to short blocks
+     (Chrome: ~6 lines) for performance, so long paragraphs silently fall
+     back to normal wrapping — safe to apply globally rather than
+     per-heading. Unsupported browsers just ignore the property. */
+  text-wrap: balance;
   /* kern/liga = kerning pairs, ligatures
      ss01 = round dots, ss04 = alt K, ss05 = alt R, ss06 = alt M,
      ss07 = alt G, ss08 = alt J, ss10 = alt 2, ss12 = alt currency */

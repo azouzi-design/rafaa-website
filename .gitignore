@@ -44,3 +44,9 @@ next-env.d.ts
 *.mp4
 *.mov
 *.webm
+
+# raw source media (hero video, per-project folders, About stills) staged
+# for upload/processing — never committed. Final web assets live under
+# public/, videos are hosted on Vercel Blob (see src/lib/projects.ts,
+# src/lib/hero-video.ts).
+/raw-assets
