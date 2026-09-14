@@ -11,10 +11,9 @@ export const HERO_VIDEO = {
 };
 
 // Background audio, played from its own <audio> element independent of the
-// (silent, muted) hero video — extracted from the *previous* hero video's
-// own soundtrack, which does have real audio (~-48dB mean), since the new
-// hero video's own track doesn't.
+// (silent, muted) hero video — Fred again.. feat. The Blessed Madonna,
+// "Marea (We've Lost Dancing)".
 export const HERO_AUDIO = {
-  m4a: `${BLOB_BASE}/hero-audio-Yskia7wYCW618dVe6kbmPPPABLW1K4.m4a`,
-  webm: `${BLOB_BASE}/hero-audio-V1xhWgIsqpGzez7RxrLM11kUWsqgRg.webm`,
+  m4a: `${BLOB_BASE}/hero-audio-QSyTIPdgfXT0ywGv6QkDsoo2xQcWJv.m4a`,
+  webm: `${BLOB_BASE}/hero-audio-lEmd5o0SbltvcD6uHR9x94YQ1PCWt0.webm`,
 };
