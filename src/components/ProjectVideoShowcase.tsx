@@ -81,10 +81,9 @@ function VideoSection({ video }: { video: ProjectVideo }) {
       className="relative flex h-screen w-full snap-start items-center justify-center overflow-hidden bg-black"
     >
       <div
-        className="relative overflow-hidden rounded-[2px]"
+        className="relative max-w-[calc(100vw-32px)] overflow-hidden rounded-[2px] sm:max-w-[calc(100vw-96px)]"
         style={{
           aspectRatio: `${video.width} / ${video.height}`,
-          maxWidth: "calc(100vw - 96px)",
           maxHeight: "calc(100vh - 96px)",
           width: "auto",
           height: "auto",

@@ -33,8 +33,13 @@ const TESTIMONIALS = [
 // absolutely-positioned wrapper — two different transforms with two
 // different transition speeds can't share one `transform` property, so
 // they're split across the two elements instead.
+//
+// Padding/radius are in `em` (against the group's --title-size font
+// context — see its wrapper above) rather than px, so the button box
+// itself shrinks in step with the text and the cluster's offsets instead
+// of staying a fixed size while everything around it scales down.
 const CTA_BASE =
-  "group pointer-events-auto inline-block cursor-pointer whitespace-nowrap rounded-[2px] bg-primary px-3 py-2 text-black opacity-95 transition-[opacity,transform] duration-200 hover:opacity-100";
+  "group pointer-events-auto inline-block cursor-pointer whitespace-nowrap rounded-[0.0417em] bg-primary px-[0.25em] py-[0.1667em] text-black opacity-95 transition-[opacity,transform] duration-200 hover:opacity-100";
 
 // How far below its resting position each CTA starts, so it visibly travels
 // up from the bottom of the screen rather than just fading in place.
@@ -214,14 +219,14 @@ export default function ContactSection() {
         {TESTIMONIALS.map((t, i) => (
           <div
             key={t.attribution}
-            className="flex flex-1 flex-col items-center justify-center gap-5 rounded-[8px] bg-white/5 px-[60px] py-1.5 text-center"
+            className="flex flex-1 flex-col items-center justify-center gap-5 rounded-[8px] bg-white/5 px-[clamp(20px,6vw,60px)] py-1.5 text-center"
           >
-            <RevealOnScroll delay={i * 150}>
+            <RevealOnScroll delay={i * 150} className="max-w-full">
               <p className="text-big w-[860px] max-w-full text-white">
                 {t.quote}
               </p>
             </RevealOnScroll>
-            <RevealOnScroll delay={i * 150 + 100}>
+            <RevealOnScroll delay={i * 150 + 100} className="max-w-full">
               <p className="text-subtitle w-[490px] max-w-full text-white uppercase">
                 {t.attribution}
               </p>
@@ -234,14 +239,23 @@ export default function ContactSection() {
         {/* One shared wrapper, anchored at the section's center, carries
             the slide/scale/fade — the two buttons below are just fixed
             offsets *within* it, so they move and shrink together as a
-            single rigid unit instead of each animating independently. */}
+            single rigid unit instead of each animating independently.
+
+            Its font-size is pinned to the exact same fluid curve as
+            text-title (--title-size, globals.css), and every offset/padding
+            below is expressed in `em` against that shared baseline (each
+            em value = its original px design value / 48, 48px being
+            text-title's own desktop size) — so as the viewport narrows and
+            text-title shrinks, this cluster's whole geometry shrinks
+            proportionally right along with it instead of the buttons
+            shrinking while the fixed-px gaps between them stay put. */}
         <div
           className="pointer-events-none absolute top-1/2 left-1/2"
-          style={groupStyle(clusterVisible)}
+          style={{ ...groupStyle(clusterVisible), fontSize: "var(--title-size)" }}
         >
           <div
             className="absolute"
-            style={{ left: "73.5px", top: "-46.6px", transform: "translate(-50%, -50%)" }}
+            style={{ left: "1.5313em", top: "-0.9708em", transform: "translate(-50%, -50%)" }}
           >
             <a
               href={BOOKING_URL}
@@ -260,7 +274,7 @@ export default function ContactSection() {
               enough to their centers to visibly overlap/touch. */}
           <div
             className="absolute"
-            style={{ left: "-84px", top: "59px", transform: "translate(-50%, -50%)" }}
+            style={{ left: "-1.75em", top: "1.2292em", transform: "translate(-50%, -50%)" }}
           >
             <button
               type="button"
@@ -283,12 +297,12 @@ export default function ContactSection() {
               see ProjectsCatalogue for the fuller derivation. */}
           <div
             className="absolute"
-            style={{ left: "235px", top: "-181px", transform: "translate(-50%, -50%)" }}
+            style={{ left: "4.8958em", top: "-3.7708em", transform: "translate(-50%, -50%)" }}
           >
             <button
               type="button"
               onClick={() => setMinimized(true)}
-              className="group pointer-events-auto inline-block cursor-pointer rounded-[2px] bg-white px-2 py-0.5 text-black uppercase opacity-95 transition-opacity duration-200 hover:opacity-100"
+              className="group pointer-events-auto inline-block cursor-pointer rounded-[0.0417em] bg-white px-[0.1667em] py-[0.0417em] text-black uppercase opacity-95 transition-opacity duration-200 hover:opacity-100"
             >
               <RollingText text="minimize" className="text-subtitle" />
             </button>
@@ -303,13 +317,20 @@ export default function ContactSection() {
           back to the CTA cluster (a real un-minimize, not a temporary
           peek) — the two never show at the same time. Same interaction as
           ProjectsCatalogue's own minimize toggle. */}
-      <div
-        className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 transition-opacity duration-300 ease-out"
+      {/* onMouseEnter un-minimizes for desktop hover; onClick covers touch,
+          which doesn't reliably fire mouseenter on tap — without it this
+          was unreachable once minimized on mobile. whitespace-nowrap keeps
+          it a single line at any width, since a compact readout that wraps
+          mid-label defeats the point of collapsing to it. */}
+      <button
+        type="button"
+        className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 cursor-pointer items-center gap-1.5 whitespace-nowrap transition-opacity duration-300 ease-out"
         style={{
           opacity: iconVisible ? 1 : 0,
           pointerEvents: iconVisible ? "auto" : "none",
         }}
         onMouseEnter={() => setMinimized(false)}
+        onClick={() => setMinimized(false)}
       >
         <span className="text-subtitle text-primary uppercase">
           {copied ? "Copied!" : "Copy Email"}
@@ -325,7 +346,7 @@ export default function ContactSection() {
         <span className="text-subtitle text-primary uppercase">
           Book a Call
         </span>
-      </div>
+      </button>
     </div>
   );
 }

@@ -6,6 +6,11 @@ export type ProjectVideo = {
   height: number;
 };
 
+export type ProjectMetric = {
+  value: string;
+  label: string;
+};
+
 export type Project = {
   slug: string;
   title: string;
@@ -35,6 +40,16 @@ export type Project = {
   // per-project as real footage becomes available — undefined/empty for
   // projects not yet populated (renders nothing).
   videos?: ProjectVideo[];
+  // A full-viewport-height metrics section (ProjectMetricsSection),
+  // inserted right after the first video section. Figma lays these out by
+  // count, each card touching its neighbors' corners exactly — the array
+  // order encodes visual position, not importance:
+  //  - 1 metric: the sole card (fills the bottom-right screen quadrant)
+  //  - 2 metrics: [bottom-left, top-right]
+  //  - 3 metrics: [top-left, top-right, bottom-center]
+  // Undefined for the one project (oakley-x-cactus-jack) with no metrics
+  // design yet — renders nothing.
+  metrics?: ProjectMetric[];
 };
 
 export const PROJECTS: Project[] = [
@@ -87,6 +102,10 @@ export const PROJECTS: Project[] = [
         width: 1920,
         height: 1080,
       },
+    ],
+    metrics: [
+      { value: "6+", label: "client collaborations across 6 African countries" },
+      { value: "20+", label: "videos produced per month" },
     ],
   },
   {
@@ -163,6 +182,11 @@ export const PROJECTS: Project[] = [
         height: 1080,
       },
     ],
+    metrics: [
+      { value: "+420%", label: "user acquisition (B2C)" },
+      { value: "+50%", label: "growth in B2B lead generation" },
+      { value: "6M+", label: "engagement across all platforms" },
+    ],
   },
   {
     slug: "spectra-la-rose",
@@ -191,6 +215,7 @@ export const PROJECTS: Project[] = [
         height: 1280,
       },
     ],
+    metrics: [{ value: "+400k", label: "views" }],
   },
   {
     slug: "jam-music-academy",
@@ -224,6 +249,7 @@ export const PROJECTS: Project[] = [
         height: 1080,
       },
     ],
+    metrics: [{ value: "30+", label: "students enrolled at launch" }],
   },
   {
     slug: "oakley-x-cactus-jack",
@@ -264,6 +290,15 @@ export const PROJECTS: Project[] = [
         width: 608,
         height: 1080,
       },
+    ],
+    // NOTE: Figma's copy for the first card here is word-for-word the same
+    // as Cynoia's own metric label ("client collaborations across 6
+    // African countries") — looks like a copy/paste leftover in the
+    // design rather than intentional, but implemented as designed pending
+    // a real number/caption for this project.
+    metrics: [
+      { value: "+500K", label: "client collaborations across 6 African countries" },
+      { value: "Sold-out", label: "200+ tickets launch event" },
     ],
   },
 ];

@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import FooterLogo from "@/components/FooterLogo";
 import RollingText from "@/components/RollingText";
 import { SOCIAL_LINKS } from "@/lib/links";
+import { useFitsOneLine } from "@/lib/useFitsOneLine";
 
 // Home-relative ("/#section") rather than bare "#section" hashes — Footer
 // is now also rendered on project pages, and a bare hash there would try to
@@ -22,6 +23,14 @@ const links = [
 
 export default function Footer() {
   const footerRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  // All 8 links spread edge-to-edge (space-between) as long as they fit on
+  // one row. Unlike HeroNav's two groups, a wrapped row here can easily end
+  // up with more than one link on it, and space-between spreads THOSE back
+  // out to the row's own edges too — not the flush-left cluster we want —
+  // so (unlike Hero) this needs an actual fits/doesn't-fit measurement
+  // rather than relying on flex-wrap's single-item-per-line behavior.
+  const fitsOneLine = useFitsOneLine(navRef, 24);
 
   // Publish the footer's own (fluid, aspect-ratio driven) height as a CSS
   // var so page.tsx can reserve exactly that much trailing scroll room —
@@ -61,7 +70,14 @@ export default function Footer() {
           remount (e.g. a dev Fast Refresh full reload) could reset that
           state to "hidden" with nothing left to re-trigger it. Always
           rendering avoids that whole class of bug. */}
-      <nav className="flex w-full items-center justify-between text-black uppercase">
+      <nav
+        ref={navRef}
+        className={`flex w-full text-black uppercase ${
+          fitsOneLine
+            ? "items-center justify-between"
+            : "flex-wrap items-start justify-start gap-x-6 gap-y-4"
+        }`}
+      >
         {links.map((link) => (
           <a
             key={link.label}

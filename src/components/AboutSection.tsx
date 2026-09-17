@@ -117,9 +117,17 @@ export default function AboutSection() {
           75% { opacity: 1; transform: rotate(var(--trail-rotate)) scale(var(--trail-scale)); }
           100% { opacity: 0; transform: rotate(var(--trail-rotate)) scale(calc(var(--trail-scale) * 0.94)); }
         }
+        @keyframes about-carousel-scroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .about-carousel-track {
+          width: max-content;
+          animation: about-carousel-scroll 26s linear infinite;
+        }
       `}</style>
 
-      <div className="absolute inset-0 z-0 flex items-center justify-center px-[20px]">
+      <div className="absolute inset-0 z-0 flex items-center justify-center px-[20px] max-[940px]:pb-[170px]">
         <div className="flex max-w-[800px] flex-col gap-8 text-center">
           <RevealOnScroll>
             <p className="text-big text-white">
@@ -140,7 +148,26 @@ export default function AboutSection() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-10">
+      {/* Mobile has no cursor to drive the hover trail above, so it gets a
+          continuously auto-scrolling carousel of the same photos instead,
+          docked 20px off the bottom edge. The image list is duplicated so
+          translateX(-50%) always lands exactly one set later, looping
+          seamlessly regardless of item count or width. */}
+      <div className="hidden max-[940px]:absolute max-[940px]:inset-x-0 max-[940px]:bottom-[20px] max-[940px]:z-10 max-[940px]:block max-[940px]:overflow-hidden">
+        <div className="about-carousel-track flex gap-1.5 px-4">
+          {[...ABOUT_IMAGES, ...ABOUT_IMAGES].map((src, i) => (
+            <div
+              key={`${src}-${i}`}
+              className="h-[136px] w-[110px] shrink-0 overflow-hidden rounded-[2px] shadow-[0_10px_25px_rgba(0,0,0,0.45)]"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="h-full w-full object-cover" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 z-10 max-[940px]:hidden">
         {trail.map((item) => (
           <div
             key={item.id}

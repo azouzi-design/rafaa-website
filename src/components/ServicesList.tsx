@@ -73,7 +73,7 @@ export default function ServicesList({
   const list = (
     <ul
       onMouseLeave={onListLeave}
-      className={`flex flex-col gap-1 ${
+      className={`flex flex-col gap-1 max-[940px]:order-3 max-[940px]:w-full max-[940px]:items-start ${
         side === "right" ? "items-end" : "items-start"
       }`}
     >
@@ -81,7 +81,7 @@ export default function ServicesList({
         <li
           key={item}
           onMouseEnter={(e) => onRowEnter(e, i)}
-          className="group cursor-default whitespace-nowrap"
+          className="group cursor-default whitespace-nowrap max-[940px]:whitespace-normal"
         >
           <RevealOnScroll delay={i * 60}>
             <RollingText
@@ -96,6 +96,26 @@ export default function ServicesList({
     </ul>
   );
 
+  // Below 940px the hover-driven pointer (see `stepper` below) has no touch
+  // equivalent, so the pack name + mark are shown here instead as a static,
+  // always-visible title leading the stacked mobile layout.
+  const mobileTitle = (
+    <RevealOnScroll className="hidden max-[940px]:order-1 max-[940px]:block">
+      <div className="flex items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/logo-mark.svg"
+          alt=""
+          aria-hidden="true"
+          className="h-[11px] w-[13px]"
+        />
+        <span className="text-subtitle text-primary uppercase">
+          {packName}
+        </span>
+      </div>
+    </RevealOnScroll>
+  );
+
   // Slot is sized to the pointer's own measured width, stretched to the
   // list's full height (its tallest sibling) so the pointer's `top` —
   // measured relative to this slot — lines up with whichever row is
@@ -105,7 +125,7 @@ export default function ServicesList({
   const stepper = (
     <div
       ref={slotRef}
-      className="relative shrink-0 self-stretch"
+      className="relative shrink-0 self-stretch max-[940px]:hidden"
       style={{ width: pointerWidth || undefined }}
     >
       <div
@@ -147,9 +167,9 @@ export default function ServicesList({
   );
 
   const paragraph = (
-    <RevealOnScroll className="w-[300px] shrink-0">
+    <RevealOnScroll className="w-[300px] shrink-0 max-[940px]:order-2 max-[940px]:w-full max-[940px]:max-w-[300px]">
       <p
-        className={`text-paragraph text-white ${
+        className={`text-paragraph text-white max-[940px]:text-left ${
           side === "right" ? "text-left" : "text-right"
         }`}
       >
@@ -159,7 +179,8 @@ export default function ServicesList({
   );
 
   return (
-    <div className="flex h-full w-full items-center justify-center gap-[12px]">
+    <div className="flex h-full w-full items-center justify-center gap-[12px] max-[940px]:flex-col max-[940px]:items-start max-[940px]:justify-center max-[940px]:gap-6 max-[940px]:px-4 max-[940px]:py-24">
+      {mobileTitle}
       {side === "right" ? (
         <>
           {list}

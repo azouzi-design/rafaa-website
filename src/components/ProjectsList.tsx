@@ -13,6 +13,13 @@ import { PROJECTS as ALL_PROJECTS, type Project } from "@/lib/projects";
 const PREVIEW_MAX_WIDTH = 340;
 const PREVIEW_MAX_HEIGHT = 420;
 const CURSOR_OFFSET_X = 200;
+
+// Mobile carousel (<=620px): shared card height for portrait/square videos.
+// Horizontally-aligned (landscape) videos run 30% shorter so a wide card
+// doesn't dominate the strip — width still follows from the source's own
+// aspect ratio at whichever height applies.
+const MOBILE_CARD_HEIGHT = 220;
+const MOBILE_CARD_HEIGHT_LANDSCAPE = Math.round(MOBILE_CARD_HEIGHT * 0.7);
 const TRANSITION: Transition = {
   type: "spring",
   stiffness: 400,
@@ -73,9 +80,20 @@ export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListPr
       onMouseLeave={() => setHovered(null)}
       className="relative flex h-full w-full items-center justify-center overflow-hidden"
     >
+      <style>{`
+        @keyframes projects-carousel-scroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .projects-mobile-carousel-track {
+          width: max-content;
+          animation: projects-carousel-scroll 9s linear infinite;
+        }
+      `}</style>
+
       <motion.div
         style={{ x, y, translateX: "-50%", translateY: "-50%" }}
-        className="pointer-events-none absolute top-0 left-0 z-10 overflow-hidden rounded-[2px]"
+        className="pointer-events-none absolute top-0 left-0 z-10 overflow-hidden rounded-[2px] max-[620px]:hidden"
         animate={{
           opacity: anyActive ? 1 : 0,
           width: activeSize.width,
@@ -122,7 +140,7 @@ export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListPr
 
       <div
         onMouseLeave={() => setHovered(null)}
-        className="flex flex-col items-center gap-[2px]"
+        className="flex flex-col items-center gap-[2px] max-[620px]:hidden"
       >
         {projects.map((project, i) => {
           const isHovered = hovered === i;
@@ -161,6 +179,55 @@ export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListPr
             </RevealOnScroll>
           );
         })}
+      </div>
+
+      {/* Below 620px there's no cursor to drive the hover preview above, so
+          projects get a continuously auto-scrolling carousel instead: each
+          card is its own title + video, video kept at its own source aspect
+          ratio (fitted to a shared height) rather than forced into one
+          shape. The project list is duplicated so translateX(-50%) always
+          lands exactly one set later, looping seamlessly. */}
+      <div className="hidden max-[620px]:block max-[620px]:w-full max-[620px]:overflow-hidden">
+        <div className="projects-mobile-carousel-track flex gap-[32px] px-4">
+          {[...projects, ...projects].map((project, i) => {
+            const isLandscape =
+              project.coverVideo.width > project.coverVideo.height;
+            const cardHeight = isLandscape
+              ? MOBILE_CARD_HEIGHT_LANDSCAPE
+              : MOBILE_CARD_HEIGHT;
+            return (
+              <Link
+                key={`${project.slug}-${i}`}
+                href={`/projects/${project.slug}`}
+                className="flex shrink-0 flex-col items-start gap-[12px]"
+              >
+                <span
+                  className="text-subtitle text-white uppercase"
+                  style={{ fontSize: "12px" }}
+                >
+                  {project.title}
+                </span>
+                <video
+                  src={project.coverVideo.src}
+                  poster={project.coverImage}
+                  muted
+                  loop
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{
+                    aspectRatio: `${project.coverVideo.width} / ${project.coverVideo.height}`,
+                    height: cardHeight,
+                  }}
+                  className="w-auto rounded-[2px] object-cover"
+                />
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

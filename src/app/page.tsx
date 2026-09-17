@@ -61,7 +61,7 @@ export default function Home() {
         <div id="hero" className="relative snap-start">
           <HeroVideo />
           <HeroNav />
-          <div className="absolute bottom-4 left-4 z-10 flex flex-col items-start gap-4">
+          <div className="absolute inset-x-4 bottom-4 z-10 flex flex-col items-start gap-4">
             <RevealOnScroll delay={1100}>
               <p className="text-paragraph text-white">
                 By Rafaa Chawali ® Creative partner
@@ -69,8 +69,8 @@ export default function Home() {
                 who specializes in video marketing
               </p>
             </RevealOnScroll>
-            <RevealOnScroll delay={1250}>
-              <Logo className="aspect-[410/87] h-[112px]" />
+            <RevealOnScroll delay={1250} className="max-w-full">
+              <Logo className="aspect-[410/87] w-[528px] max-w-full" />
             </RevealOnScroll>
           </div>
         </div>
@@ -81,14 +81,20 @@ export default function Home() {
         <section id="projects" className="h-screen w-full snap-start bg-black">
           <ProjectsList />
         </section>
-        <section id="services-1" className="h-screen w-full snap-start bg-black">
+        <section
+          id="services-1"
+          className="h-screen w-full snap-start bg-black max-[940px]:h-auto max-[940px]:min-h-screen"
+        >
           <ServicesList
             packName="Creative Partner Pack"
             description="Best for brands needing high-level vision, ongoing strategic direction, and complete creative ownership."
             items={CREATIVE_PARTNER_PACK}
           />
         </section>
-        <section id="services-2" className="h-screen w-full snap-start bg-black">
+        <section
+          id="services-2"
+          className="h-screen w-full snap-start bg-black max-[940px]:h-auto max-[940px]:min-h-screen"
+        >
           <ServicesList
             side="left"
             packName="Production Pack"

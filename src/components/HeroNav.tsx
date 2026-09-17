@@ -40,50 +40,61 @@ export default function HeroNav() {
   };
 
   return (
-    <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 text-white uppercase">
-      <ul className="flex items-center gap-6">
-        {primaryLinks.map((link, i) => (
-          <li key={link.label}>
-            <a href={link.href} className="group block">
-              <RevealOnScroll delay={HERO_DELAY + i * 60}>
-                <RollingText text={link.label} className="text-subtitle" />
-              </RevealOnScroll>
-            </a>
-          </li>
-        ))}
-      </ul>
-      <ul className="flex items-center gap-6">
-        {secondaryLinks.map((link, i) => (
-          <li key={link.label}>
-            <a
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block"
+    <div className="absolute inset-x-0 top-0 z-10 p-4 text-white uppercase">
+      {/* The two groups sit at opposite edges (space-between) as long as
+          they fit side by side. Once they'd collide, flex-wrap drops the
+          second group to its own line, where space-between — now with
+          only one item left on that line — resolves to flex-start per
+          spec, landing it flush left with no separate "wrapped" state
+          needed. gap-x/gap-y are a floor: invisible while space-between
+          has plenty of room to spread into, they only bite right before
+          the wrap (minimum breathing room between the groups) and become
+          the vertical gap between the two lines once wrapped. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+        <ul className="flex flex-wrap items-start gap-x-6 gap-y-4">
+          {primaryLinks.map((link, i) => (
+            <li key={link.label}>
+              <a href={link.href} className="group block">
+                <RevealOnScroll delay={HERO_DELAY + i * 60}>
+                  <RollingText text={link.label} className="text-subtitle" />
+                </RevealOnScroll>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <ul className="flex flex-wrap items-start gap-x-6 gap-y-4">
+          {secondaryLinks.map((link, i) => (
+            <li key={link.label}>
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block"
+              >
+                <RevealOnScroll delay={HERO_DELAY + (primaryLinks.length + i) * 60}>
+                  <RollingText text={link.label} className="text-subtitle" />
+                </RevealOnScroll>
+              </a>
+            </li>
+          ))}
+          <li>
+            <button
+              type="button"
+              onClick={onCopyEmail}
+              className="group block cursor-pointer uppercase"
             >
-              <RevealOnScroll delay={HERO_DELAY + (primaryLinks.length + i) * 60}>
-                <RollingText text={link.label} className="text-subtitle" />
+              <RevealOnScroll
+                delay={HERO_DELAY + (primaryLinks.length + secondaryLinks.length) * 60}
+              >
+                <RollingText
+                  text={copied ? "Copied!" : "Copy Email"}
+                  className="text-subtitle"
+                />
               </RevealOnScroll>
-            </a>
+            </button>
           </li>
-        ))}
-        <li>
-          <button
-            type="button"
-            onClick={onCopyEmail}
-            className="group block cursor-pointer uppercase"
-          >
-            <RevealOnScroll
-              delay={HERO_DELAY + (primaryLinks.length + secondaryLinks.length) * 60}
-            >
-              <RollingText
-                text={copied ? "Copied!" : "Copy Email"}
-                className="text-subtitle"
-              />
-            </RevealOnScroll>
-          </button>
-        </li>
-      </ul>
+        </ul>
+      </div>
     </div>
   );
 }

@@ -13,9 +13,15 @@
 :root {
   /* shared shadow style used across hero text and graphics — black @ 15% */
   --shadow-soft: 0px 2px 4px rgba(10, 10, 10, 0.15);
+  /* text-title's own font-size, exposed so other elements (e.g. Contact's
+     CTA cluster) can anchor an `em`-based layout to the exact same fluid
+     curve — everything sized in `em` against it then scales down together
+     with the title text itself, instead of drifting apart from it. */
+  --title-size: clamp(28px, 3vw + 16px, 48px);
 }
 
-/* Subtitle: Instrument Sans SemiBold 14px, 1.15 line-height, -1% tracking */
+/* Subtitle: Instrument Sans SemiBold 14px (13px on mobile, <=620px),
+   1.15 line-height, -1% tracking */
 @utility text-subtitle {
   font-family: var(--font-sans);
   font-weight: 600;
@@ -23,6 +29,10 @@
   line-height: 1.15;
   letter-spacing: -0.01em;
   text-shadow: var(--shadow-soft);
+
+  @media (width <= 620px) {
+    font-size: 13px;
+  }
 }
 
 /* Paragraph: Instrument Sans Regular 16px, 1.2 line-height, -1% tracking */
@@ -39,7 +49,7 @@
 @utility text-title {
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 48px;
+  font-size: var(--title-size);
   line-height: 1.05;
   letter-spacing: -0.02em;
   text-transform: uppercase;
@@ -51,7 +61,7 @@
 @utility text-big {
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 28px;
+  font-size: clamp(18px, 1.5vw + 12px, 28px);
   line-height: 1.15;
   letter-spacing: -0.02em;
 }

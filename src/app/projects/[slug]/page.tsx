@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ProjectHeader from "@/components/ProjectHeader";
 import ProjectHero from "@/components/ProjectHero";
 import ProjectVideoShowcase from "@/components/ProjectVideoShowcase";
+import ProjectMetricsSection from "@/components/ProjectMetricsSection";
 import ProjectsCatalogue from "@/components/ProjectsCatalogue";
 import Footer from "@/components/Footer";
 import { PROJECTS, getProject } from "@/lib/projects";
@@ -43,7 +44,11 @@ export default async function ProjectPage(
       <main className="relative z-10 bg-black">
         <ProjectHero project={project} />
 
-        <ProjectVideoShowcase videos={project.videos} />
+        {/* First video, then metrics, then the rest — metrics sit right
+            after the opening video rather than after the whole showcase. */}
+        <ProjectVideoShowcase videos={project.videos?.slice(0, 1)} />
+        <ProjectMetricsSection metrics={project.metrics} />
+        <ProjectVideoShowcase videos={project.videos?.slice(1)} />
 
         <ProjectsCatalogue currentSlug={project.slug} />
       </main>
