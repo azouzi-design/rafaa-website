@@ -281,8 +281,17 @@ export const PROJECTS: Project[] = [
       width: 2212,
       height: 936,
     },
-    // No `videos` — this is the only clip found for this project (raw-assets
-    // has just the one cover video, no additional footage to showcase).
+    videos: [
+      {
+        // Cover video -ai-video-generator-case-study-rafaa-chawali.webm —
+        // same file as coverVideo above (the only clip for this project),
+        // reused rather than re-uploaded.
+        src: media("projects/oakley-x-cactus-jack-404a5974.webm"),
+        fallbackSrc: media("projects/oakley-x-cactus-jack-7442226c.mp4"),
+        width: 2212,
+        height: 936,
+      },
+    ],
   },
   {
     slug: "radhi-chawali-hide-and-seek",
