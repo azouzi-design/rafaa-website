@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ProjectVideo } from "@/lib/projects";
-
-function mimeTypeFor(src: string) {
-  const ext = src.split(".").pop()?.split("?")[0]?.toLowerCase();
-  return ext === "mp4" ? "video/mp4" : "video/webm";
-}
+import VideoSources from "@/components/VideoSources";
 
 // One full-viewport-height section per video, the video itself "contain"-
 // fit within a box inset 48px on every side — regardless of orientation,
@@ -115,7 +111,7 @@ function VideoSection({ video }: { video: ProjectVideo }) {
           onContextMenu={(e) => e.preventDefault()}
           className="h-full w-full object-cover"
         >
-          <source src={video.src} type={mimeTypeFor(video.src)} />
+          <VideoSources src={video.src} fallbackSrc={video.fallbackSrc} />
         </video>
 
         {/* Progress */}

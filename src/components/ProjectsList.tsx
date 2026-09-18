@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useSpring, type Transition } from "framer-motion";
 import RevealOnScroll from "@/components/RevealOnScroll";
-import { PROJECTS as ALL_PROJECTS, type Project } from "@/lib/projects";
+import VideoSources from "@/components/VideoSources";
+import { PROJECTS as ALL_PROJECTS, type Project, type ProjectVideo } from "@/lib/projects";
 
 // Bounding box the cursor-following preview animates within — each
 // project's own video keeps its real aspect ratio (portrait, landscape,
@@ -39,11 +40,11 @@ function fitInBox(width: number, height: number) {
 // pauses again once it slides out. Keeps phones from downloading every
 // cover video just by loading the page.
 function CarouselVideo({
-  src,
+  video,
   poster,
   style,
 }: {
-  src: string;
+  video: ProjectVideo;
   poster: string;
   style: React.CSSProperties;
 }) {
@@ -66,7 +67,6 @@ function CarouselVideo({
   return (
     <video
       ref={ref}
-      src={src}
       poster={poster}
       muted
       loop
@@ -77,7 +77,9 @@ function CarouselVideo({
       onContextMenu={(e) => e.preventDefault()}
       style={style}
       className="w-auto rounded-[2px] object-cover"
-    />
+    >
+      <VideoSources src={video.src} fallbackSrc={video.fallbackSrc} />
+    </video>
   );
 }
 
@@ -170,7 +172,6 @@ export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListPr
                 ref={(el) => {
                   videoRefs.current[i] = el;
                 }}
-                src={project.coverVideo.src}
                 poster={project.coverImage}
                 muted
                 loop
@@ -180,7 +181,12 @@ export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListPr
                 disableRemotePlayback
                 onContextMenu={(e) => e.preventDefault()}
                 className="h-full w-full object-cover"
-              />
+              >
+                <VideoSources
+                  src={project.coverVideo.src}
+                  fallbackSrc={project.coverVideo.fallbackSrc}
+                />
+              </video>
             </motion.div>
           );
         })}
@@ -256,7 +262,7 @@ export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListPr
                   {project.title}
                 </span>
                 <CarouselVideo
-                  src={project.coverVideo.src}
+                  video={project.coverVideo}
                   poster={project.coverImage}
                   style={{
                     aspectRatio: `${project.coverVideo.width} / ${project.coverVideo.height}`,

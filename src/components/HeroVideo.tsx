@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { HERO_VIDEO, HERO_AUDIO } from "@/lib/hero-video";
+import VideoSources from "@/components/VideoSources";
 
 export default function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -141,8 +142,7 @@ export default function HeroVideo() {
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
       >
-        <source src={HERO_VIDEO.webm} type="video/webm" />
-        <source src={HERO_VIDEO.mp4} type="video/mp4" />
+        <VideoSources src={HERO_VIDEO.webm} fallbackSrc={HERO_VIDEO.mp4} />
       </video>
 
       <audio ref={audioRef} loop preload="none">

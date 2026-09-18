@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, type Transition } from "framer-motion";
 import RevealOnScroll from "@/components/RevealOnScroll";
+import VideoSources from "@/components/VideoSources";
 import type { Project } from "@/lib/projects";
 
 const TRANSITION: Transition = {
@@ -260,7 +261,6 @@ export default function ProjectHero({ project }: { project: Project }) {
             distorting it, so tall/portrait sources stay centered rather
             than stretched or pinned to one edge. */}
         <video
-          src={project.coverVideo.src}
           poster={project.coverImage}
           autoPlay
           muted
@@ -270,7 +270,12 @@ export default function ProjectHero({ project }: { project: Project }) {
           disableRemotePlayback
           onContextMenu={(e) => e.preventDefault()}
           className="h-full w-full object-cover"
-        />
+        >
+          <VideoSources
+            src={project.coverVideo.src}
+            fallbackSrc={project.coverVideo.fallbackSrc}
+          />
+        </video>
       </motion.div>
 
       {/* Part1 copy: fixed in place at 20% from the left, vertically
