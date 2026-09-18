@@ -53,6 +53,20 @@ function VideoSection({ video }: { video: ProjectVideo }) {
     );
     observer.observe(root);
 
+    // Bandwidth: nothing beyond metadata is fetched until this section is
+    // within one screen of the viewport, then it buffers fully so the snap
+    // scroll lands on a video that's already ready. Sections a visitor
+    // never scrolls near are never downloaded.
+    const nearObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        el.preload = "auto";
+        nearObserver.disconnect();
+      },
+      { rootMargin: "100% 0px" },
+    );
+    nearObserver.observe(root);
+
     const onTimeUpdate = () => {
       if (el.duration) setProgress(el.currentTime / el.duration);
     };
@@ -61,6 +75,7 @@ function VideoSection({ video }: { video: ProjectVideo }) {
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       observer.disconnect();
+      nearObserver.disconnect();
       el.removeEventListener("timeupdate", onTimeUpdate);
     };
   }, []);
@@ -92,10 +107,9 @@ function VideoSection({ video }: { video: ProjectVideo }) {
         <video
           ref={videoRef}
           muted={muted}
-          autoPlay
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           disablePictureInPicture
           disableRemotePlayback
           onContextMenu={(e) => e.preventDefault()}

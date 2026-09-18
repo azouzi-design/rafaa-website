@@ -33,6 +33,54 @@ function fitInBox(width: number, height: number) {
   return { width: Math.round(width * scale), height: Math.round(height * scale) };
 }
 
+// Mobile carousel card video: shows its poster and fetches nothing until the
+// card is actually on screen (the track's overflow-hidden parent clips
+// off-screen cards, which IntersectionObserver accounts for), then plays;
+// pauses again once it slides out. Keeps phones from downloading every
+// cover video just by loading the page.
+function CarouselVideo({
+  src,
+  poster,
+  style,
+}: {
+  src: string;
+  poster: string;
+  style: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) el.play().catch(() => {});
+        else el.pause();
+      },
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={ref}
+      src={src}
+      poster={poster}
+      muted
+      loop
+      playsInline
+      preload="none"
+      disablePictureInPicture
+      disableRemotePlayback
+      onContextMenu={(e) => e.preventDefault()}
+      style={style}
+      className="w-auto rounded-[2px] object-cover"
+    />
+  );
+}
+
 type ProjectsListProps = {
   // Defaults to every project (homepage usage). A project's own page
   // passes every OTHER project — see ProjectsCatalogue.
@@ -207,22 +255,13 @@ export default function ProjectsList({ projects = ALL_PROJECTS }: ProjectsListPr
                 >
                   {project.title}
                 </span>
-                <video
+                <CarouselVideo
                   src={project.coverVideo.src}
                   poster={project.coverImage}
-                  muted
-                  loop
-                  autoPlay
-                  playsInline
-                  preload="metadata"
-                  disablePictureInPicture
-                  disableRemotePlayback
-                  onContextMenu={(e) => e.preventDefault()}
                   style={{
                     aspectRatio: `${project.coverVideo.width} / ${project.coverVideo.height}`,
                     height: cardHeight,
                   }}
-                  className="w-auto rounded-[2px] object-cover"
                 />
               </Link>
             );

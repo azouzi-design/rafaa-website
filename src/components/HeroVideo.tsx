@@ -58,10 +58,11 @@ export default function HeroVideo() {
 
   // Audio: independent of scroll position — it's ambient background sound
   // for the whole visit, so it keeps playing wherever the user has
-  // scrolled to, only stopping when the tab itself isn't visible. Same
-  // resilient-autoplay pattern the video used to use for its own sound:
-  // first attempt unmuted (rare browsers allow it), fall back to muted +
-  // waiting for the mute button (a real gesture) to unlock it.
+  // scrolled to, only stopping when the tab itself isn't visible. First
+  // attempt unmuted (rare browsers allow it); if that's blocked, stay
+  // paused rather than looping silently — a muted loop would still
+  // download the whole track for visitors who never turn sound on. The
+  // unmute button (a real gesture) then starts it.
   const shouldPlayRef = useRef(false);
   const hasAttemptedUnmutedRef = useRef(false);
 
@@ -79,11 +80,10 @@ export default function HeroVideo() {
           .catch(() => {
             audio.muted = true;
             setSoundOn(false);
-            audio.play().catch(() => {});
           });
         return;
       }
-      audio.play().catch(() => {});
+      if (!audio.muted) audio.play().catch(() => {});
     };
 
     const sync = () => {
@@ -98,12 +98,12 @@ export default function HeroVideo() {
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     const onPause = () => {
-      if (shouldPlayRef.current) audio.play().catch(() => {});
+      if (shouldPlayRef.current && !audio.muted) audio.play().catch(() => {});
     };
     audio.addEventListener("pause", onPause);
 
     const onInteraction = () => {
-      if (shouldPlayRef.current && audio.paused) audio.play().catch(() => {});
+      if (shouldPlayRef.current && !audio.muted && audio.paused) audio.play().catch(() => {});
     };
     window.addEventListener("pointerdown", onInteraction);
     window.addEventListener("keydown", onInteraction);
@@ -122,8 +122,10 @@ export default function HeroVideo() {
     const next = !soundOn;
     audio.muted = !next;
     setSoundOn(next);
-    // Click is a real user gesture, so unmuted playback is always allowed here.
-    audio.play().catch(() => {});
+    // Click is a real user gesture, so unmuted playback is always allowed
+    // here. Muting pauses outright — no point streaming a silent loop.
+    if (next) audio.play().catch(() => {});
+    else audio.pause();
   };
 
   return (
@@ -143,7 +145,7 @@ export default function HeroVideo() {
         <source src={HERO_VIDEO.mp4} type="video/mp4" />
       </video>
 
-      <audio ref={audioRef} loop preload="auto">
+      <audio ref={audioRef} loop preload="none">
         <source src={HERO_AUDIO.webm} type="audio/webm" />
         <source src={HERO_AUDIO.m4a} type="audio/mp4" />
       </audio>
