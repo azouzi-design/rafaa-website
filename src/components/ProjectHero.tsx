@@ -96,73 +96,92 @@ export default function ProjectHero({ project }: { project: Project }) {
     const duration = 260;
     const startTime = performance.now();
     const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
+    // With html's mandatory scroll-snap live, each intermediate scrollTo
+    // gets re-snapped by the browser, which fights the glide and can
+    // land it on the wrong section — so snap is off for its duration.
+    const html = document.documentElement;
+    html.style.scrollSnapType = "none";
 
     const step = (now: number) => {
       const t = Math.min((now - startTime) / duration, 1);
       window.scrollTo(0, startY + (endY - startY) * easeOutCubic(t));
-      if (t < 1) requestAnimationFrame(step);
-      else advancingRef.current = false;
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        html.style.scrollSnapType = "";
+        advancingRef.current = false;
+      }
     };
     requestAnimationFrame(step);
   };
 
   useEffect(() => {
-    // A single physical swipe fires many wheel events in a burst; once one
-    // of them triggers a phase flip, the rest of that same burst is eaten
-    // too so it can't also leak into *also* advancing in the same motion
-    // (or, on the way back, past part1) — a gesture should only ever do
-    // one step. Wheel/touch have no real "gesture end" event, so
-    // quiet-for-a-beat stands in for one; this must stay uncapped (a fixed
-    // time limit here previously let one long gesture fall through mid-
-    // transition and immediately trigger the *next* step too).
+    // A single physical swipe fires many wheel events in a burst — and on
+    // a trackpad, a long decaying momentum tail after the fingers lift.
+    // Each gesture may perform at most one step; the rest of its events
+    // are eaten so they can't also advance again (or, after a leave,
+    // leak into native scroll where mandatory snap carries the page on
+    // past the next section too).
     //
-    // What actually needs to be time-bounded is different: once we've
-    // genuinely left (not at rest, and no leave-animation in flight), this
-    // global window listener must stop swallowing immediately, regardless
-    // of the gesture-active flag above — otherwise a still-active flag
-    // (kept alive by continued scrolling elsewhere) silently eats wheel
-    // input anywhere on the page long after this section stopped being
-    // relevant.
-    let wheelGestureActive = false;
-    let wheelQuietTimer: ReturnType<typeof setTimeout> | undefined;
-    const armWheelQuietTimer = () => {
-      clearTimeout(wheelQuietTimer);
-      wheelQuietTimer = setTimeout(() => {
-        wheelGestureActive = false;
-      }, 200);
-    };
+    // Wheel has no real "gesture end" event, so gesture boundaries are
+    // inferred: a gap of GESTURE_GAP_MS between events, or — so a fresh
+    // swipe isn't held hostage by the previous swipe's still-decaying
+    // momentum — a sharp jump in |deltaY| once the burst's initial
+    // ramp-up is over. (A plain quiet-timer alone kept getting re-armed
+    // by momentum, blocking new swipes for seconds.)
+    //
+    // Only gestures this hero itself consumed (`ownedByHero`) keep being
+    // swallowed after the page has left the hero; any other gesture that
+    // isn't at rest passes straight through to native scroll.
+    const GESTURE_GAP_MS = 120;
+    const RAMP_UP_MS = 250;
+    let lastWheelTime = -Infinity;
+    let lastWheelAbs = 0;
+    let gestureStart = 0;
+    let gestureUsed = false;
+    let ownedByHero = false;
 
     const onWheel = (e: WheelEvent) => {
-      if (!isAtRest() && !advancingRef.current) {
-        wheelGestureActive = false;
-        return;
+      const now = e.timeStamp;
+      const abs = Math.abs(e.deltaY);
+      const isNewGesture =
+        now - lastWheelTime > GESTURE_GAP_MS ||
+        (now - gestureStart > RAMP_UP_MS && abs > 8 && abs > lastWheelAbs * 2);
+      if (isNewGesture) {
+        gestureStart = now;
+        gestureUsed = false;
+        ownedByHero = false;
       }
-      if (wheelGestureActive) {
-        e.preventDefault();
-        armWheelQuietTimer();
-        return;
-      }
+      lastWheelTime = now;
+      lastWheelAbs = abs;
+
       if (advancingRef.current) {
         // Mid leave-animation — keep consuming until it finishes.
         e.preventDefault();
         return;
       }
-      if (e.deltaY > 0 && !enteredRef.current) {
-        e.preventDefault();
-        setPhase(true);
-        wheelGestureActive = true;
-        armWheelQuietTimer();
-      } else if (e.deltaY < 0 && enteredRef.current) {
-        e.preventDefault();
-        setPhase(false);
-        wheelGestureActive = true;
-        armWheelQuietTimer();
-      } else if (e.deltaY > 0 && enteredRef.current) {
-        e.preventDefault();
-        advanceToNext();
-        wheelGestureActive = true;
-        armWheelQuietTimer();
+      if (gestureUsed) {
+        if (ownedByHero) e.preventDefault();
+        return;
       }
+      if (!isAtRest()) {
+        // A native scroll gesture: let it through, but don't let its tail
+        // flip the hero if it happens to come to rest there mid-gesture.
+        gestureUsed = true;
+        return;
+      }
+      if (e.deltaY > 0 && !enteredRef.current) {
+        setPhase(true);
+      } else if (e.deltaY < 0 && enteredRef.current) {
+        setPhase(false);
+      } else if (e.deltaY > 0 && enteredRef.current) {
+        advanceToNext();
+      } else {
+        return;
+      }
+      e.preventDefault();
+      gestureUsed = true;
+      ownedByHero = true;
     };
 
     let touchStartY = 0;
@@ -203,7 +222,6 @@ export default function ProjectHero({ project }: { project: Project }) {
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
     return () => {
-      clearTimeout(wheelQuietTimer);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
